@@ -2,24 +2,23 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const hostname = '127.0.0.1';
-const port = 3000;
+const hostname = '127.0.0.1'; // Allow public access
+const port = process.env.PORT || 4040; // Use the PORT environment variable
 
 // Function to serve files
 const serveFile = (filePath, res) => {
   fs.readFile(filePath, (err, data) => {
     if (err) {
+      console.error(`Error reading file: ${filePath}`, err);
       res.statusCode = 500;
       res.setHeader('Content-Type', 'text/plain');
-      res.end('Internal Server Error\n');
+      res.end(`Internal Server Error: ${err.message}\n`);
       return;
     }
 
-    res.statusCode = 200;
     const extname = path.extname(filePath);
-    let contentType = 'text/html';
+    let contentType = 'text/html'; // Default to HTML
 
-    // Set content type based on file extension
     switch (extname) {
       case '.html':
         contentType = 'text/html';
@@ -35,28 +34,39 @@ const serveFile = (filePath, res) => {
     }
 
     res.setHeader('Content-Type', contentType);
-    res.end(data); // Send the content
+    res.statusCode = 200;
+    res.end(data);
   });
 };
 
 const server = http.createServer((req, res) => {
-  // Routing based on URL
   let filePath = '';
 
-  if (req.url === '/') {
-    filePath = path.join(__dirname, 'public', 'create-sprint02.html'); // Serve the homepage
-  } else if (req.url === '/style.css') {
-    filePath = path.join(__dirname, 'public', 'style.css'); // Example CSS file
-  } else if (req.url === '/script.js') {
-    filePath = path.join(__dirname, 'public', 'script.js'); // Example JS file
-  } else {
-    res.statusCode = 404;
-    res.setHeader('Content-Type', 'text/plain');
-    res.end('404 Not Found\n');
-    return;
+  // Determine the requested URL and set the file path accordingly
+  switch (req.url) {
+    case '/':
+      filePath = path.join(__dirname, 'public', 'create-sprint02.html');
+      break;
+    case '/create-task-interface':
+      filePath = path.join(__dirname, 'public', 'Create Task Interface.html');
+      break;
+    case '/drag-and-drop-ui':
+      filePath = path.join(__dirname, 'public', 'Drag and drop UI.html');
+      break;
+    case '/edit-sprint':
+      filePath = path.join(__dirname, 'public', 'Edit Sprint.html');
+      break;
+    case '/task-in-detail':
+      filePath = path.join(__dirname, 'public', 'Task in Detail.html');
+      break;
+    default:
+      res.statusCode = 404;
+      res.setHeader('Content-Type', 'text/plain');
+      res.end('404 Not Found\n');
+      return;
   }
 
-  // Serve the requested file
+  console.log(`Requesting file: ${filePath}`);
   serveFile(filePath, res);
 });
 
